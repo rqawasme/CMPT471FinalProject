@@ -447,13 +447,13 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
         });
 
         if ($scope.customABRRulesSelected) {
-            // $scope.player.addABRCustomRule('qualitySwitchRules', 'DownloadRatioRule', DownloadRatioRule); /* jshint ignore:line */
-            // $scope.player.addABRCustomRule('qualitySwitchRules', 'ThroughputRule', CustomThroughputRule); /* jshint ignore:line */
-            $scope.player.addABRCustomRule('qualitySwitchRules','PureBufferOccupancyRule', PureBufferOccupancyRule);
+            $scope.player.addABRCustomRule('qualitySwitchRules', 'DownloadRatioRule', DownloadRatioRule); /* jshint ignore:line */
+            $scope.player.addABRCustomRule('qualitySwitchRules', 'ThroughputRule', CustomThroughputRule); /* jshint ignore:line */
+            // $scope.player.addABRCustomRule('qualitySwitchRules','PureBufferOccupancyRule', PureBufferOccupancyRule);
         } else {
             $scope.player.removeABRCustomRule('DownloadRatioRule');
             $scope.player.removeABRCustomRule('ThroughputRule');
-            $scope.player.removeABRCustomRule('PureBufferOccupancyRule');
+            // $scope.player.removeABRCustomRule('PureBufferOccupancyRule');
         }
     };
 

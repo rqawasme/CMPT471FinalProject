@@ -137,6 +137,13 @@ class Constants {
         this.ABR_STRATEGY_BOLA = 'abrBola';
 
         /**
+         *  @constant {string} ABR_STRATEGY_BUFBASED Adaptive bitrate algorithm based on Bola (buffer level)
+         *  @memberof Constants#
+         *  @static
+         */
+        this.ABR_STRATEGY_BUFBASED = 'abrBufBased';
+
+        /**
          *  @constant {string} ABR_STRATEGY_L2A Adaptive bitrate algorithm based on L2A (online learning)
          *  @memberof Constants#
          *  @static

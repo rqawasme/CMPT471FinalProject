@@ -8,6 +8,8 @@ import MetricsConstants from '../../constants/MetricsConstants';
 function PureBufferOccupancyRule(config){
     config = config || {};
 
+    console.log("I AM HHHHHHHHHHHEEEEEEEEEEEEEEEEEEEEEEEERRRRRRRRRRRRRRRREEEEEEEE");
+
     let instance;  //returned object
     let logger;    //Debug tool as specified inside other rules
     let prevStreamTime; 
@@ -25,6 +27,7 @@ function PureBufferOccupancyRule(config){
     }
 
     function execute(rulesContext, callback){
+        console.log("HMMMMMMMMMMMMMMMMMMM");
         //necessary info
         let current = rulesContext.getCurrentValue();
         let streamProcessor = rulesContext.getStreamProcessor();
