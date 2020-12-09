@@ -2,45 +2,37 @@ import SwitchRequest from '../SwitchRequest';
 import AbrController from '../../controllers/AbrController';
 import FactoryMaker from '../../../core/FactoryMaker';
 import Debug from '../../../core/Debug';
-import MetricsConstants from '../../constants/MetricsConstants';
+// import ABRRulesCollection from './ABRRulesCollection';
 
-
-function PureBufferOccupancyRule(config){
+function PureBufferOccupancyRule(config) {
     config = config || {};
-
-    console.log("I AM HHHHHHHHHHHEEEEEEEEEEEEEEEEEEEEEEEERRRRRRRRRRRRRRRREEEEEEEE");
 
     let instance;  //returned object
     let logger;    //Debug tool as specified inside other rules
-    let prevStreamTime; 
+    let prevStreamTime;
 
-    const MIN_BUFFER_LEN = 10000;
-    const MAX_BUFFER_LEN = 500000;
+    const MIN_BUFFER_LEN = 10;
+    const MAX_BUFFER_LEN = 50;
 
     const context = this.context;
     const dashMetrics = config.dashMetrics;
 
 
-    function setup(){
-        console.log("WE ARE SETTING UP THE ALGO");
+    function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
         prevStreamTime = 0;
     }
 
-    function execute(rulesContext, callback){
-        console.log("HMMMMMMMMMMMMMMMMMMM execute???");
+    function getMaxIndex(rulesContext) {
         //necessary info
-        let current = rulesContext.getCurrentValue();
-        let streamProcessor = rulesContext.getStreamProcessor();
-
-        let trackInfo = rulesContext.getTrackInfo();
-        let waitToSwitchTime = !isNaN(trackInfo.fragmentDuration) ? trackInfo.fragmentDuration / 2 : 2;
+        let representationInfo = rulesContext.getRepresentationInfo();
+        let waitToSwitchTime = !isNaN(representationInfo.fragmentDuration) ? representationInfo.fragmentDuration / 2 : 2;
 
         let mediaInfo = rulesContext.getMediaInfo();
         let mediaType = mediaInfo.type;
         let maxIndex = mediaInfo.representationCount - 1;
 
-        let abrController = streamProcessor.getABRController();
+        let abrController = rulesContext.getAbrController();
 
         let ifBufferRich = false;
         let ifBuffOverRich = false;
@@ -48,46 +40,51 @@ function PureBufferOccupancyRule(config){
 
 
         const useBufferOccupancyABR = rulesContext.useBufferOccupancyABR();
+        const streamInfo = rulesContext.getStreamInfo();
+        const isDynamic = streamInfo && streamInfo.manifestInfo && streamInfo.manifestInfo.isDynamic;
 
         // get b(t)
         let lastBufferLevel = dashMetrics.getCurrentBufferLevel(mediaType);
-        let lastBufferState = (metrics.BufferState.length > 0) ? metrics.BufferState[metrics.BufferState.length - 1] : null;
+        let lastBufferState = dashMetrics.getCurrentBufferState(mediaType);
 
         let t = new Date().getTime() / 1000; //current time
-        if(t - prevStreamTime < waitToSwitchTime || abrController.getAbandonmentStateFor(mediaType) == AbrController.ABANDON_LOAD || !useBufferOccupancyABR){
-            callback(switchRequest);
-            return;
+        if (t - prevStreamTime < waitToSwitchTime || abrController.getAbandonmentStateFor(mediaType) == AbrController.ABANDON_LOAD || !useBufferOccupancyABR) {
+            return switchRequest;
         }
 
-        if(lastBufferState != null){
-            if(lastBufferLevel > lastBufferState.target){
+        if (lastBufferState !== null) {
+            if (lastBufferLevel > lastBufferState.target) {
 
                 // decrease the video quality when buffer length < MIN_LEN
-                if(lastBufferLevel < MIN_BUFFER_LEN){
+                if (lastBufferLevel < MIN_BUFFER_LEN) {
                     ifBufferRich = false;
                 }
                 // increase the quality as buffer length increases
-                else if(lastBufferLevel >= MIN_BUFFER_LEN && lastBufferLevel < MAX_BUFFER_LEN)
+                else if (lastBufferLevel >= MIN_BUFFER_LEN && lastBufferLevel < MAX_BUFFER_LEN)
                 {
                     ifBufferRich = true;
                 }
                 // keep in best quality if buffer lengh >= MAX_LEN
-                else if(lastBufferLevel >= MAX_BUFFER_LEN)
+                else if (lastBufferLevel >= MAX_BUFFER_LEN)
                 {
                     ifBufferRich = true;
                     ifBuffOverRich = true;
                 }
 
 
-                if(maxIndex > 0){
-                    if(ifBufferRich && ifBuffOverRich){
+                if (maxIndex > 0) {
+                    if (ifBufferRich && ifBuffOverRich) {
                         //best quality
-                        const maxQuality = abrRulesCollection.getMaxQuality(rulesContext).quality;
-                        switchRequest.quality = maxQuality;
-                    }else if(!ifBufferRich && !ifBuffOverRich){
+                        // let abrRulesCollection = ABRRulesCollection(context).create({
+                        //     dashMetrics: dashMetrics
+                        // });
+                        // abrRulesCollection.initialize();
+                        // const maxQuality = abrRulesCollection.getMaxQuality(rulesContext);
+                        // switchRequest.quality = maxQuality;
+                    }else if (!ifBufferRich && !ifBuffOverRich) {
                         //lowest quality
                         switchRequest.quality = 0;
-                    }else if(ifBufferRich && !ifBuffOverRich){
+                    }else if (ifBufferRich && !ifBuffOverRich) {
                         //calculate quality dynamically
                         const throughputHistory = abrController.getThroughputHistory();
                         const throughput = throughputHistory.getSafeAverageThroughput(mediaType, isDynamic);
@@ -97,28 +94,20 @@ function PureBufferOccupancyRule(config){
                     switchRequest.value = maxIndex;
                     switchRequest.priority = SwitchRequest.STRONG;
                     switchRequest.reason.bufferLevel = lastBufferLevel;
-                    switchRequest.reason.bufferTarget = lastBufferState.target;         
+                    switchRequest.reason.bufferTarget = lastBufferState.target;
                 }
             }
         }
-        
-        if(switchRequest.value !== SwitchRequest.NO_CHANGE && switchRequest.value !== current) {
-                log('BufferOccupancyRule requesting switch to index: ', switchRequest.value, 'type: ',mediaType, ' Priority: ',
-                    switchRequest.priority === SwitchRequest.DEFAULT ? 'Default' :
-                        switchRequest.priority === SwitchRequest.STRONG ? 'Strong' : 'Weak');
-        }  
-        callback(switchRequest);
+        // if (switchRequest.value !== SwitchRequest.NO_CHANGE && switchRequest.value !== current) {
+        //     logger('BufferOccupancyRule requesting switch to index: ', switchRequest.value, 'type: ',mediaType, ' Priority: ',
+        //     switchRequest.priority === SwitchRequest.DEFAULT ? 'Default' :
+        //     switchRequest.priority === SwitchRequest.STRONG ? 'Strong' : 'Weak');
+        // }
+        return switchRequest;
     }
 
-    function getMaxIndex(rulesContext) {
-        let mediaInfo = rulesContext.getMediaInfo();
-        let maxIndex = mediaInfo.representationCount - 1;
-        return maxIndex;
-    }
-
-    instance = {        
-        getMaxIndex: getMaxIndex,
-        execute: execute
+    instance = {
+        getMaxIndex: getMaxIndex
     };
 
     setup();

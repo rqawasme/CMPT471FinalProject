@@ -1,21 +1,11 @@
-// import SwitchRequest from '../src/streaming/rules/SwitchRequest.js';
-// import AbrController from '../src/streaming/controllers/AbrController.js';
-// import FactoryMaker from '../../../core/FactoryMaker.js';
-// import Debug from '../src/core/Debug.js';
-// import MetricsConstants from '../src/streaming/constants/MetricsConstants.js';
+import SwitchRequest from '../SwitchRequest';
+import AbrController from '../../controllers/AbrController';
+import FactoryMaker from '../../../core/FactoryMaker';
+import Debug from '../../../core/Debug';
+import MetricsConstants from '../../constants/MetricsConstants';
 
-var PureBufferOccupancyRule;
 
-// Doesn't work :/
-function PureBufferOccupancyRuleClass(config){
-
-    let factory = dashjs.FactoryMaker;
-    let SwitchRequest = factory.getClassFactoryByName('SwitchRequest');
-    let MetricsModel = factory.getSingletonFactoryByName('MetricsModel');
-    let StreamController = factory.getSingletonFactoryByName('StreamController');
-    let DashMetrics = factory.getSingletonFactoryByName('DashMetrics');
-    let Debug = factory.getSingletonFactoryByName('Debug');
-
+function PureBufferOccupancyRule(config){
     config = config || {};
 
     console.log("I AM HHHHHHHHHHHEEEEEEEEEEEEEEEEEEEEEEEERRRRRRRRRRRRRRRREEEEEEEE");
@@ -24,8 +14,8 @@ function PureBufferOccupancyRuleClass(config){
     let logger;    //Debug tool as specified inside other rules
     let prevStreamTime; 
 
-    const MIN_BUFFER_LEN = 10;
-    const MAX_BUFFER_LEN = 50;
+    const MIN_BUFFER_LEN = 10000;
+    const MAX_BUFFER_LEN = 500000;
 
     const context = this.context;
     const dashMetrics = config.dashMetrics;
@@ -37,22 +27,20 @@ function PureBufferOccupancyRuleClass(config){
         prevStreamTime = 0;
     }
 
-    function getMaxIndex(rulesContext){
+    function execute(rulesContext, callback){
         console.log("HMMMMMMMMMMMMMMMMMMM execute???");
         //necessary info
+        let current = rulesContext.getCurrentValue();
+        let streamProcessor = rulesContext.getStreamProcessor();
 
-        let metricsModel = MetricsModel(context).getInstance();
-        let dashMetrics = DashMetrics(context).getInstance();
-
-        let representationInfo = rulesContext.getRepresentationInfo();
-        let waitToSwitchTime = !isNaN(representationInfo.fragmentDuration) ? representationInfo.fragmentDuration / 2 : 2;
+        let trackInfo = rulesContext.getTrackInfo();
+        let waitToSwitchTime = !isNaN(trackInfo.fragmentDuration) ? trackInfo.fragmentDuration / 2 : 2;
 
         let mediaInfo = rulesContext.getMediaInfo();
         let mediaType = mediaInfo.type;
         let maxIndex = mediaInfo.representationCount - 1;
-        var metrics = metricsModel.getMetricsFor(mediaType, true);
 
-        let abrController = rulesContext.getAbrController();
+        let abrController = streamProcessor.getABRController();
 
         let ifBufferRich = false;
         let ifBuffOverRich = false;
@@ -60,15 +48,14 @@ function PureBufferOccupancyRuleClass(config){
 
 
         const useBufferOccupancyABR = rulesContext.useBufferOccupancyABR();
-        const streamInfo = rulesContext.getStreamInfo();
-        const isDynamic = streamInfo && streamInfo.manifestInfo && streamInfo.manifestInfo.isDynamic;
 
         // get b(t)
         let lastBufferLevel = dashMetrics.getCurrentBufferLevel(mediaType);
-        let lastBufferState = dashMetrics.getCurrentBufferState(mediaType);
+        let lastBufferState = (metrics.BufferState.length > 0) ? metrics.BufferState[metrics.BufferState.length - 1] : null;
 
         let t = new Date().getTime() / 1000; //current time
         if(t - prevStreamTime < waitToSwitchTime || abrController.getAbandonmentStateFor(mediaType) == AbrController.ABANDON_LOAD || !useBufferOccupancyABR){
+            callback(switchRequest);
             return;
         }
 
@@ -120,19 +107,23 @@ function PureBufferOccupancyRuleClass(config){
                     switchRequest.priority === SwitchRequest.DEFAULT ? 'Default' :
                         switchRequest.priority === SwitchRequest.STRONG ? 'Strong' : 'Weak');
         }  
-
-        // callback(switchRequest);
-        return switchRequest;
+        callback(switchRequest);
     }
 
+    function getMaxIndex(rulesContext) {
+        let mediaInfo = rulesContext.getMediaInfo();
+        let maxIndex = mediaInfo.representationCount - 1;
+        return maxIndex;
+    }
 
     instance = {        
         getMaxIndex: getMaxIndex,
+        execute: execute
     };
 
     setup();
     return instance;
 }
 
-PureBufferOccupancyRuleClass.__dashjs_factory_name = 'PureBufferOccupancyRule';
-PureBufferOccupancyRule = dashjs.FactoryMaker.getClassFactory(PureBufferOccupancyRuleClass);
+PureBufferOccupancyRule.__dashjs_factory_name = 'PureBufferOccupancyRule';
+export default FactoryMaker.getClassFactory(PureBufferOccupancyRule);

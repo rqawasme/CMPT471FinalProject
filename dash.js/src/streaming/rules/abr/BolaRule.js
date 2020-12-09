@@ -69,7 +69,6 @@ function BolaRule(config) {
         bolaStateDict;
 
     function setup() {
-        console.log("BOLA SETUP");
         logger = Debug(context).getInstance().getLogger(instance);
         resetInitialSettings();
 
