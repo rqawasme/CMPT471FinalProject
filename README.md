@@ -1,5 +1,5 @@
 # CMPT471FinalProject
-## Performance Evaluation of Bitrate Adaptation Algorithm on DASH
+Performance Evaluation of Bitrate Adaptation Algorithm on DASH
 
 Team ID: 14
 
