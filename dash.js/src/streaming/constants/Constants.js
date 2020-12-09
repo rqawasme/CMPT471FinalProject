@@ -142,6 +142,13 @@ class Constants {
          *  @static
          */
         this.ABR_STRATEGY_BUFBASED = 'abrBufBased';
+        
+        /**
+         *  @constant {string} ABR_STRATEGY_BBA0 Adaptive bitrate algorithm based on BBA-0 (buffer level)
+         *  @memberof Constants#
+         *  @static
+         */
+        this.ABR_STRATEGY_BUFBASED = 'abrBufBBA0';
 
         /**
          *  @constant {string} ABR_STRATEGY_L2A Adaptive bitrate algorithm based on L2A (online learning)
