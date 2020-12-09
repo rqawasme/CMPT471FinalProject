@@ -10,7 +10,7 @@ import FactoryMaker from '../../../core/FactoryMaker';
 import Debug from '../../../core/Debug';
 import MetricsModel from "../../models/MetricsModel";
 
-function PureBufferOccupancyRule(config){
+function BBA0Rule(config){
     config = config || {};
     const context = this.context;
 
@@ -24,10 +24,14 @@ function PureBufferOccupancyRule(config){
     const dashMetrics = config.dashMetrics;
     const mediaPlayerModel = config.mediaPlayerModel;
 
-    //  the size of reservoir needs to be at least one chunk (2s in the script)
-    const reservoir = 2; 
-    // the buffer distance between B1 and Bm
-    const cushion = 0;
+    //  Input: Rateprev: The previously used video rate; Bufnow: The current buffer occupancy
+    //  r: The size of reservoir; cu: The size of cushion
+    //  Output: Ratenext: The next video rate
+
+    //  the size of reservoir needs to be at least one chunk
+    const reservoir = 24; 
+    // the buffer distance between B1 and Bm or 0.9*bufferlength
+    const cushion = 126;
 
     function setup(){
         logger = Debug(context).getInstance().getLogger(instance);
@@ -45,8 +49,8 @@ function PureBufferOccupancyRule(config){
         }            
     }
 
-    function execute(rulesContext, callback){
-        //necessary info
+    function getMaxIndex(rulesContext){
+        // retrieve information
         let current = rulesContext.getCurrentValue();
         let streamProcessor = rulesContext.getStreamProcessor();
 
@@ -55,19 +59,16 @@ function PureBufferOccupancyRule(config){
 
         let mediaInfo = rulesContext.getMediaInfo();
         let mediaType = mediaInfo.type;
-        let maxIndex = mediaInfo.representationCount - 1;
 
         let abrController = streamProcessor.getABRController();
         let metrics = metricsModel.getReadOnlyMetricsFor(mediaType);
 
         let ifBufferRich = false;
-        let switchRequest = SwitchRequest(context).create(SwitchRequest.NO_CHANGE, SwitchRequest.WEAK, {name: PureBufferOccupancyRule.__dashjs_factory_name});
+        let switchRequest = SwitchRequest(context).create(SwitchRequest.NO_CHANGE, SwitchRequest.WEAK, {name: BBA0Rule.__dashjs_factory_name});
 
         let bitrateList = abrController.getBitrateList(mediaInfo);
         let rateMap = {};
-
         let step = cushion / (bitrateList.length-1);
-
         for(let i = 0; i < bitrateList.length; i++){
             rateMap[reservoir + i * step] = bitrateList[i].bitrate;
         }
@@ -75,9 +76,13 @@ function PureBufferOccupancyRule(config){
         let rateMax = bitrateList[bitrateList.length-1].bitrate;
         let rateMin = bitrateList[0].bitrate;
         ratePrev = ratePrev > rateMin ? ratePrev : rateMin;
-        let ratePlus = rateMax;
-        let rateMinus = rateMin;
+        let ratePlus = 0;
+        let rateMinus = 0;
 
+    // if Rateprev = Rmax then
+    //      Rate+ = Rmax
+    // else
+    //      Rate+ = min{Ri : Ri > Rateprev}
         if(ratePrev === rateMax)
             ratePlus = rateMax;
         else
@@ -88,6 +93,10 @@ function PureBufferOccupancyRule(config){
                 }
             }
 
+    // if Rateprev = Rmin then
+    //      Rate− = Rmin
+    // else
+    //      Rate− = max{Ri : Ri < Rateprev}
         if(ratePrev === rateMin){
             rateMinus = rateMin;
         }            
@@ -99,10 +108,19 @@ function PureBufferOccupancyRule(config){
                 }
             }                
         }
-            
+        
+    // if Bufnow ≤ r then
+    //      Ratenext = Rmin
+    // else if Bufnow ≥ (r + cu) then
+    //      Ratenext = Rmax
+    // else if f(Bufnow) ≥ Rate+ then
+    //      Ratenext = max{Ri : Ri < f(Bufnow)};
+    // else if f(Bufnow) ≤ Rate− then
+    //      Ratenext = min{Ri : Ri > f(Bufnow)};
+    // else
+    //      Ratenext = Rateprev;            
         let currentBufferLevel = dashMetrics.getCurrentBufferLevel(metrics);
         let bufNow = defineRateMap(currentBufferLevel, step, rateMap);
-
         let rateNext;
         if(currentBufferLevel <= reservoir)
             rateNext = rateMin;
@@ -127,49 +145,24 @@ function PureBufferOccupancyRule(config){
         else
             rateNext = ratePrev;
         ratePrev = rateNext;
-        switchRequest.quality = abrController.getQualityForBitrate(mediaInfo, rateNext/1000, 0);
-
-        if(currentBufferState != null){
-            if(currentBufferLevel > currentBufferState.target){
-                ifBufferRich = (currentBufferLevel - currentBufferState.target) > mediaPlayerModel.getRichBufferThreshold();
-
-                if(ifBufferRich && maxIndex > 0){
-                    switchRequest.value = maxIndex;
-                    switchRequest.priority = SwitchRequest.STRONG;
-                    switchRequest.reason.bufferLevel = currentBufferLevel;
-                    switchRequest.reason.bufferTarget = currentBufferState.target;                    
-                }
-            }
-        }
+        switchRequest.quality = abrController.getQualityForBitrate(mediaInfo, rateNext, 0); //set latency to 0
         
-        if(switchRequest.value !== SwitchRequest.NO_CHANGE && switchRequest.value !== current) {
-                log('BufferOccupancyRule requesting switch to index: ', switchRequest.value, 'type: ',mediaType, ' Priority: ',
-                    switchRequest.priority === SwitchRequest.DEFAULT ? 'Default' :
-                        switchRequest.priority === SwitchRequest.STRONG ? 'Strong' : 'Weak');
-        }  
-        callback(switchRequest);
+         return switchRequest;
+    }
 
+    function reset() {
+        // no persistent information to reset
     }
 
     instance = {
-        execute: execute
+        getMaxIndex: getMaxIndex,
+        reset: reset
     };
 
     setup();
+
     return instance;
 }
 
-PureBufferOccupancyRule.__dashjs_factory_name = 'PureBufferOccupancyRule';
-export default FactoryMaker.getClassFactory(PureBufferOccupancyRule);
-
-/*  edits in other files
-
-    - ABRRulesCollection.js
-    import PureBufferOccupancyRule from "./PureBufferOccupancyRule";
-    qualitySwitchRules.push(
-        PureBufferOccupancyRule(context).create({
-        metricsModel: metricsModel,
-        dashMetrics: dashMetrics,
-        mediaPlayerModel: mediaPlayerModel
-    })
-); */
+BBA0Rule.__dashjs_factory_name = 'BBA0Rule';
+export default FactoryMaker.getClassFactory(BBA0Rule);
