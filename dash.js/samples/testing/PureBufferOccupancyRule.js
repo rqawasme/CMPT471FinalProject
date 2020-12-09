@@ -1,11 +1,19 @@
-import SwitchRequest from '../SwitchRequest';
-import AbrController from '../../controllers/AbrController';
-import FactoryMaker from '../../../core/FactoryMaker';
-import Debug from '../../../core/Debug';
-import MetricsConstants from '../../constants/MetricsConstants';
+// import SwitchRequest from '../src/streaming/rules/SwitchRequest.js';
+// import AbrController from '../src/streaming/controllers/AbrController.js';
+// import FactoryMaker from '../../../core/FactoryMaker.js';
+// import Debug from '../src/core/Debug.js';
+// import MetricsConstants from '../src/streaming/constants/MetricsConstants.js';
 
+var PureBufferOccupancyRule;
 
-function PureBufferOccupancyRule(config){
+function PureBufferOccupancyRuleClass(config){
+
+    let factory = dashjs.FactoryMaker;
+    let SwitchRequest = factory.getClassFactoryByName('SwitchRequest');
+    let MetricsModel = factory.getSingletonFactoryByName('MetricsModel');
+    let StreamController = factory.getSingletonFactoryByName('StreamController');
+    let Debug = factory.getSingletonFactoryByName('Debug');
+
     config = config || {};
 
     console.log("I AM HHHHHHHHHHHEEEEEEEEEEEEEEEEEEEEEEEERRRRRRRRRRRRRRRREEEEEEEE");
@@ -38,7 +46,7 @@ function PureBufferOccupancyRule(config){
 
         let mediaInfo = rulesContext.getMediaInfo();
         let mediaType = mediaInfo.type;
-        let maxIndex = mediaInfo.representationCount - 1;
+        let maxIndex = getMaxIndex(rulesContext);
 
         let abrController = streamProcessor.getABRController();
 
@@ -116,6 +124,7 @@ function PureBufferOccupancyRule(config){
         return maxIndex;
     }
 
+
     instance = {        
         getMaxIndex: getMaxIndex,
         execute: execute
@@ -125,5 +134,5 @@ function PureBufferOccupancyRule(config){
     return instance;
 }
 
-PureBufferOccupancyRule.__dashjs_factory_name = 'PureBufferOccupancyRule';
-export default FactoryMaker.getClassFactory(PureBufferOccupancyRule);
+PureBufferOccupancyRuleClass.__dashjs_factory_name = 'PureBufferOccupancyRule';
+PureBufferOccupancyRule = dashjs.FactoryMaker.getClassFactory(PureBufferOccupancyRuleClass);

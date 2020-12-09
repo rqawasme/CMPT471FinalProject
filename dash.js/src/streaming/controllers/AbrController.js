@@ -459,7 +459,8 @@ function AbrController() {
             isUsingBufferOccupancyABRDict[mediaType] = false;
             isUsingL2AABRDict[mediaType] = true;
             return;
-        } else if (strategy === Constants.ABR_STRATEGY_BOLA) {
+        } else if (strategy === Constants.ABR_STRATEGY_BUFBASED) {
+        // } else if (strategy === Constants.ABR_STRATEGY_BOLA) {
             isUsingBufferOccupancyABRDict[mediaType] = true;
             isUsingL2AABRDict[mediaType] = false;
             return;
@@ -468,6 +469,11 @@ function AbrController() {
             isUsingL2AABRDict[mediaType] = false;
             return;
         }
+        // } else if (strategy === Constants.ABR_STRATEGY_BUFBASED) {
+        //     isUsingBufferOccupancyABRDict[mediaType] = true;
+        //     isUsingL2AABRDict[mediaType] = false;
+        //     return;
+        // }
 
         // else ABR_STRATEGY_DYNAMIC
         _updateDynamicAbrStrategy(mediaType, bufferLevel);

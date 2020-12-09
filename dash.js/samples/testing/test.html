@@ -11,7 +11,7 @@
     <script src="../../dist/dash.protection.debug.js"></script>
     <script src="../../dist/dash.reporting.debug.js"></script>
 
-    <script>
+    <!-- <script>
         function init() {
         var video,
             player,
@@ -57,6 +57,34 @@
             document.getElementById('chrome-only').style.display = "none";
         }
     }
+    </script> -->
+
+    <!-- THIS IS FOR CUSTOM RULES -->
+    <script src="PureBufferOccupancyRule.js"></script>
+    <script>
+        function init() {
+            var video,
+                player,
+                url = "https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd";
+    
+            video = document.querySelector("video");
+            player = dashjs.MediaPlayer().create();
+    
+            /* don't use dash.js default rules */
+            player.updateSettings({
+                'streaming': {
+                    'abr': {
+                        'useDefaultABRRules': false
+                    }
+                }
+            });
+    
+            /* add my custom quality switch rule. Look at LowestBitrateRule.js to know more */
+            /* about the structure of a custom rule */
+            player.addABRCustomRule('qualitySwitchRules', 'PureBufferOccupancyRule', PureBufferOccupancyRule);
+    
+            player.initialize(video, url, true);
+        }
     </script>
 
     <style>
@@ -83,13 +111,14 @@
 <p>My first paragraph.</p>
 
 
-<!-- <div>
+<div>
     <p>bfv?</p>
-    <video autoplay="" preload="none" controls="true">
+    <video></video>
+    <!-- <video autoplay="" preload="none" controls="true">
         <source src="video1/stream.mpd" type="application/dash+xml">
-    </video>
+    </video> -->
     
-    <p>autoload single vid src?</p>
+    <!-- <p>autoload single vid src?</p>
     <div class="code">
         <video data-dashjs-player autoplay src="https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd" controls="true"></video>
     </div>
@@ -97,10 +126,10 @@
     <p>aut load single video?</p>
     <video autoplay preload="none" controls="true">
         <source src="https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd" type="application/dash+xml"/>
-    </video>
-</div> -->
+    </video> -->
+</div>
 
-<div id="container">
+<!-- <div id="container">
     <h2>testing the metrics</h2>
     <div class="video-container">
         <video id="videoMonit" data-dashjs-player autoplay src="https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd" controls="true"/>
@@ -118,7 +147,7 @@
         <strong>Framerate:</strong>
         <span id="framerate"></span>
     </div>
-</div>
+</div> -->
 
 <script>
     document.addEventListener("DOMContentLoaded", function () {
