@@ -1,0 +1,130 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"/>
+    <title>TESTING</title>
+
+    <script src="../../dist/dash.all.debug.js"></script>
+    <script src="../../dist/dash.mediaplayer.debug.js"></script>
+    <script src="../../dist/dash.mss.debug.js"></script>
+    <script src="../../dist/dash.protection.debug.js"></script>
+    <script src="../../dist/dash.reporting.debug.js"></script>
+
+    <script>
+        function init() {
+        var video,
+            player,
+            url = "https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd";
+
+        video = document.querySelector("#videoMonit");
+        player = dashjs.MediaPlayer().create();
+        player.initialize(video, url, true);
+        player.on(dashjs.MediaPlayer.events["PLAYBACK_ENDED"], function () {
+            clearInterval(eventPoller);
+            clearInterval(bitrateCalculator);
+        });
+
+        var eventPoller = setInterval( () => {
+            var streamInfo = player.getActiveStream().getStreamInfo();
+            var dashMetrics = player.getDashMetrics();
+            var dashAdapter = player.getDashAdapter();
+
+            if (dashMetrics && streamInfo) {
+                const periodIdx = streamInfo.index;
+                var repSwitch = dashMetrics.getCurrentRepresentationSwitch('video', true);
+                var bufferLevel = dashMetrics.getCurrentBufferLevel('video', true); 
+                var bitrate = repSwitch ? Math.round(dashAdapter.getBandwidthForRepresentation(repSwitch.to, periodIdx) / 1000) : NaN;
+                var adaptation = dashAdapter.getAdaptationForType(periodIdx, 'video', streamInfo)
+                var frameRate = adaptation.Representation_asArray.find( (rep) => {
+                    return rep.id === repSwitch.to
+                }).frameRate;
+                document.getElementById('bufferLevel').innerText = bufferLevel + " secs";
+                document.getElementById('framerate').innerText = frameRate + " fps";
+                document.getElementById('reportedBitrate').innerText = bitrate + " Kbps";
+            }
+        }, 1000);
+
+        if (video.webkitVideoDecodedByteCount !== undefined) {
+            var lastDecodedByteCount = 0;
+            const bitrateInterval = 5;
+            var bitrateCalculator = setInterval(function () {
+                var calculatedBitrate = (((video.webkitVideoDecodedByteCount - lastDecodedByteCount) / 1000) * 8) / bitrateInterval;
+                document.getElementById('calculatedBitrate').innerText = Math.round(calculatedBitrate) + " Kbps";
+                lastDecodedByteCount = video.webkitVideoDecodedByteCount;
+            }, bitrateInterval * 1000);
+        } else {
+            document.getElementById('chrome-only').style.display = "none";
+        }
+    }
+    </script>
+
+    <style>
+        video {
+            width: 640px;
+            height: 360px;
+        }
+
+        #container {
+            display: inline-block;
+        }
+
+        #container > div {
+            display: inline-block;
+            float: left;
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<h1>My First Heading</h1>
+
+<p>My first paragraph.</p>
+
+
+<!-- <div>
+    <p>bfv?</p>
+    <video autoplay="" preload="none" controls="true">
+        <source src="video1/stream.mpd" type="application/dash+xml">
+    </video>
+    
+    <p>autoload single vid src?</p>
+    <div class="code">
+        <video data-dashjs-player autoplay src="https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd" controls="true"></video>
+    </div>
+
+    <p>aut load single video?</p>
+    <video autoplay preload="none" controls="true">
+        <source src="https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd" type="application/dash+xml"/>
+    </video>
+</div> -->
+
+<div id="container">
+    <h2>testing the metrics</h2>
+    <div class="video-container">
+        <video id="videoMonit" data-dashjs-player autoplay src="https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd" controls="true"/>
+    </div>
+    <div>
+        <strong>Reported bitrate:</strong>
+        <span id="reportedBitrate"></span>
+        <br/>
+        <strong>Buffer level:</strong>
+        <span id="bufferLevel"></span>
+        <div id="chrome-only">
+            <strong>Calculated bitrate:</strong>
+            <span id="calculatedBitrate"></span>
+        </div>
+        <strong>Framerate:</strong>
+        <span id="framerate"></span>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        init();
+    });
+</script>
+
+</body>
+</html>

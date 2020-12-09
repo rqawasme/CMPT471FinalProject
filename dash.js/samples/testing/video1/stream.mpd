@@ -1,0 +1,45 @@
+<?xml version="1.0" ?>
+<MPD mediaPresentationDuration="PT3M54.835S" minBufferTime="PT3.95S" profiles="urn:mpeg:dash:profile:isoff-on-demand:2011" type="static" xmlns="urn:mpeg:dash:schema:mpd:2011">
+  <!-- Created with Bento4 mp4-dash.py, VERSION=1.7.0-613 -->
+  <Period>
+    <!-- Video -->
+    <AdaptationSet maxHeight="1080" maxWidth="1920" mimeType="video/mp4" minHeight="1080" minWidth="1920" segmentAlignment="true" startWithSAP="1">
+      <Representation bandwidth="3280621" codecs="avc1.640028" frameRate="30000/1001" height="1080" id="video-1" scanType="progressive" width="1920">
+        <BaseURL>media-video-1.mp4</BaseURL>
+        <SegmentBase indexRange="727-1466">
+          <Initialization range="0-726"/>
+        </SegmentBase>
+      </Representation>
+      <Representation bandwidth="2544688" codecs="avc1.640028" frameRate="30000/1001" height="1080" id="video-2" scanType="progressive" width="1920">
+        <BaseURL>media-video-2.mp4</BaseURL>
+        <SegmentBase indexRange="727-1466">
+          <Initialization range="0-726"/>
+        </SegmentBase>
+      </Representation>
+      <Representation bandwidth="1822588" codecs="avc1.640028" frameRate="30000/1001" height="1080" id="video-3" scanType="progressive" width="1920">
+        <BaseURL>media-video-3.mp4</BaseURL>
+        <SegmentBase indexRange="727-1466">
+          <Initialization range="0-726"/>
+        </SegmentBase>
+      </Representation>
+      <Representation bandwidth="1465335" codecs="avc1.640028" frameRate="30000/1001" height="1080" id="video-4" scanType="progressive" width="1920">
+        <BaseURL>media-video-4.mp4</BaseURL>
+        <SegmentBase indexRange="727-1466">
+          <Initialization range="0-726"/>
+        </SegmentBase>
+      </Representation>
+      <Representation bandwidth="1075613" codecs="avc1.640028" frameRate="30000/1001" height="1080" id="video-5" scanType="progressive" width="1920">
+        <BaseURL>media-video-5.mp4</BaseURL>
+        <SegmentBase indexRange="727-1466">
+          <Initialization range="0-726"/>
+        </SegmentBase>
+      </Representation>
+      <Representation bandwidth="639346" codecs="avc1.640028" frameRate="30000/1001" height="1080" id="video-6" scanType="progressive" width="1920">
+        <BaseURL>media-video-6.mp4</BaseURL>
+        <SegmentBase indexRange="727-1466">
+          <Initialization range="0-726"/>
+        </SegmentBase>
+      </Representation>
+    </AdaptationSet>
+  </Period>
+</MPD>
