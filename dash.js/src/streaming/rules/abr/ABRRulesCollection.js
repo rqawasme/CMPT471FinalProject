@@ -36,6 +36,7 @@ import SwitchHistoryRule from './SwitchHistoryRule';
 import BolaRule from './BolaRule';
 import L2ARule from './L2ARule.js';
 import PureBufferOccupancyRule from './PureBufferOccupancyRule';
+import BBA0Rule from './BBA0Rule.js';
 import FactoryMaker from '../../../core/FactoryMaker';
 import SwitchRequest from '../SwitchRequest';
 import Constants from '../../constants/Constants';
@@ -91,6 +92,12 @@ function ABRRulesCollection(config) {
                 qualitySwitchRules.push(
                     ThroughputRule(context).create({
                         dashMetrics: dashMetrics
+                    })
+                );
+                qualitySwitchRules.push(
+                    BBA0Rule(context).create({
+                        dashMetrics: dashMetrics,
+                        mediaPlayerModel: mediaPlayerModel
                     })
                 );
                 qualitySwitchRules.push(
