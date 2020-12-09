@@ -1,5 +1,4 @@
-# CMPT471FinalProject
-Performance Evaluation of Bitrate Adaptation Algorithm on DASH
+# CMPT471 - Performance Evaluation of Bitrate Adaptation Algorithm on DASH
 
 Team ID: 14
 
@@ -20,12 +19,14 @@ DASH.js 3.2.0 (instead of 2.3.0 as specified from the binary)
 ## How to run:
 
 After cloning project, run
-- npm install #installs the dependencies
-- grunt dev 
+- replace nginx.conf with default one in /etc/nginx
+- put dash.js, streaming, client folder in /var/www/html/ (the default root directory of nginx)
+- open dash.js and npm install #installs the dependencies
+- grunt dev in dash.js #generates all libraries
+- start the nginx server
 - go to http://localhost:3000/samples/dash-if-reference-player/index.html
-- click show options
-- select BUFFER BASED
-- click load and observe
+- click show options, select BUFFER BASED
+- load a video of mdp and observe
 
 
 ## Performance Evaluation
