@@ -20,11 +20,12 @@ DASH.js 3.2.0 (instead of 2.3.0 as specified from the binary)
 
 After cloning project, run
 - replace nginx.conf with default one in /etc/nginx
-- put dash.js, streaming, client folder in /var/www/html/ (the default root directory of nginx)
-- open dash.js and npm install #installs the dependencies (if npm fails, install with **cnpm** instead)
-- grunt dev in dash.js #generates all libraries (if **grunt dev** fails, run **grunt -force**)
+- create a folder named streaming and place it in /var/www/html/ (the default root directory of nginx)
+- put dash.js, videos under streaming folder (/var/www/html/streaming/dash.js and /var/www/html/streaming/videos)
+- open dash.js and `npm install` #installs the dependencies (if npm fails, install with `cnpm install` instead)
+- grunt dev in dash.js #generates all libraries (if `grunt dev` fails, run `*grunt -force`)
 - start the nginx server
-- go to http://localhost:3000/samples/dash-if-reference-player/index.html
+- go to http://localhost:8080/samples/dash-if-reference-player/index.html
 - click show options, select BUFFER BASED
 - load a video of mdp and observe
 
