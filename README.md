@@ -13,6 +13,7 @@ Binaries to the set-up (provided by Dr.Diab)
 https://vault.sfu.ca/index.php/s/kwJjOlCAKWJ6KuJ
 
 Ubuntu 20.04.1
+
 DASH.js 3.2.0 (instead of 2.3.0 as specified from the binary)
 
 
