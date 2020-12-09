@@ -239,6 +239,12 @@
                            ng-click="changeABRStrategy('abrBufBased')">
                     ABR Strategy: BUFFER BASED 
                 </label>
+                <label data-toggle="tooltip" data-placement="right"
+                       title="Choose bitrate based on buffer level implemented with BBA-0 algorithm.">
+                    <input type="radio" id="abrBBA0" autocomplete="off" name="abrStrategy"
+                           ng-click="changeABRStrategy('abrBBA0')">
+                    ABR Strategy: BBA-0 
+                </label>
                 <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
                        title="ABR - Use custom ABR rules">
                     <input type="checkbox" id="customABRRules" ng-model="customABRRulesSelected"
