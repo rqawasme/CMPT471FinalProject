@@ -2,7 +2,7 @@ import SwitchRequest from '../SwitchRequest';
 import AbrController from '../../controllers/AbrController';
 import FactoryMaker from '../../../core/FactoryMaker';
 import Debug from '../../../core/Debug';
-// import ABRRulesCollection from './ABRRulesCollection';
+import ABRRulesCollection from './ABRRulesCollection';
 
 function PureBufferOccupancyRule(config) {
     config = config || {};
@@ -75,12 +75,12 @@ function PureBufferOccupancyRule(config) {
                 if (maxIndex > 0) {
                     if (ifBufferRich && ifBuffOverRich) {
                         //best quality
-                        // let abrRulesCollection = ABRRulesCollection(context).create({
-                        //     dashMetrics: dashMetrics
-                        // });
-                        // abrRulesCollection.initialize();
-                        // const maxQuality = abrRulesCollection.getMaxQuality(rulesContext);
-                        // switchRequest.quality = maxQuality;
+                        let abrRulesCollection = ABRRulesCollection(context).create({
+                            dashMetrics: dashMetrics
+                        });
+                        abrRulesCollection.initialize();
+                        const maxQuality = abrRulesCollection.getMaxQuality(rulesContext);
+                        switchRequest.quality = maxQuality;
                     }else if (!ifBufferRich && !ifBuffOverRich) {
                         //lowest quality
                         switchRequest.quality = 0;
